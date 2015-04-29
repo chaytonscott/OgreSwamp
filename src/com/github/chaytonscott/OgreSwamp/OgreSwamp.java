@@ -13,6 +13,7 @@ public class OgreSwamp {
     Map map   = new Map();
     Ogre ogre = new Ogre();
     Sinkhole sinkholes = new Sinkhole();
+    Coordinate goldPosition;
 
     final int OGRE_SIZE = 4;
     final int MAX_DIMENSIONS = 10;
@@ -29,6 +30,8 @@ public class OgreSwamp {
         generateMap(input);
         getOgrePosition();
         getSinkholePositions();
+        getGoldPosition();
+
 
         System.out.print("OGRE POSITIONS:\t");
         for (int i = 0; i < 4; i++) {
@@ -40,9 +43,12 @@ public class OgreSwamp {
             System.out.printf("%s ", sinkholes.get_position(i).toString());
         }
 
-        Coordinate goldPosition = getGoldPosition();
         System.out.print("\nGOLD POSITION:\t" + goldPosition.toString());
+
+        System.out.print("\n\nInteger Map for easier viewing...\n");
         printMap();
+        findSolution();
+
     }
 
     public String[] getInput() {
@@ -118,120 +124,165 @@ public class OgreSwamp {
         }
     }
 
-    public Coordinate getGoldPosition() {
+    public void getGoldPosition() {
         int map[][] = this.map.getMap();
         for (int line = 0; line < MAX_DIMENSIONS; line++) {
             for (int column = 0; column < MAX_DIMENSIONS; column++) {
                 if (map[line][column] == 6) {
-                    Coordinate goldPosition = new Coordinate(line, column);
-                    return goldPosition;
+                    this.goldPosition = new Coordinate(line, column);
                 }
             }
         }
-        return null;
     }
 
-    public void moveOgreUp() {
+    public void moveOgreUp(Ogre ogre) {
         ogre.editX(-1);
     }
 
-    public void moveOgreDown() {
+    public void moveOgreDown(Ogre ogre) {
         ogre.editX(+1);
     }
 
-    public void moveOgreRight() {
+    public void moveOgreRight(Ogre ogre) {
         ogre.editY(+1);
     }
 
-    public void moveOgreLeft() {
+    public void moveOgreLeft(Ogre ogre) {
         ogre.editY(-1);
     }
 
-    public void findSolution() {
-        String moves = "";
-        int moveCount = 0;
-        while (!didWeFindGold()) {
-            int move = findSafeMove();
-            switch(move) {
-                case 0:
-                    moveOgreUp();
-                    moves += "U";
-                    break;
-                case 1:
-                    moveOgreDown();
-                    moves += "D";
-                    break;
-                case 2:
-                    moveOgreRight();
-                    moves += "R";
-                    break;
-                case 3:
-                    moveOgreLeft();
-                    moves += "L";
-                    break;
-            }
-            System.out.println(moves);
+    public boolean findSolution() {
+        Ogre tempOgre = new Ogre();
+        for (int i = 0; i < OGRE_SIZE; i++) {
+            Coordinate copy = new Coordinate(ogre.get_position(i).get_x(), ogre.get_position(i).get_y());
+            tempOgre.setPositions(copy, i);
         }
+        while (!touchingGold()) {
+            boolean xPositive, yPositive, ogreIsStuck = false;
+            if (tempOgre.get_position(3).get_x() < goldPosition.get_x()) {
+                xPositive = true;
+            } else {
+                xPositive = false;
+            }
 
+            if (tempOgre.get_position(3).get_y() < goldPosition.get_y()) {
+                yPositive = true;
+            } else {
+                yPositive = false;
+            }
+            while (!ogreIsStuck) {
+                int failsafe = 0;
+                if (xPositive = true) {
+                    tempOgre.editX(1);
+                    if (onSinkHole(tempOgre)) {
+                        tempOgre.editX(-1);
+                        failsafe++;
+                    } else {
+                        System.out.print("D");
+                    }
+                } else {
+                    tempOgre.editX(-1);
+                    if (onSinkHole(tempOgre)) {
+                        tempOgre.editX(1);
+                        failsafe++;
+                    } else {
+                        System.out.print("U");
+                    }
+                }
+                if (yPositive = true) {
+                    tempOgre.editY(1);
+                    if (onSinkHole(tempOgre)) {
+                        tempOgre.editY(-1);
+                        failsafe++;
+                    } else {
+                        System.out.print("R");
+                    }
+                } else {
+                    tempOgre.editY(-1);
+                    if (onSinkHole(tempOgre)) {
+                        tempOgre.editY(1);
+                        failsafe++;
+                    } else {
+                        System.out.print("L");
+                    }
+                }
+
+                if (failsafe == 2) {
+                    ogreIsStuck = true;
+                }
+            }
+            ogreIsStuck = false;
+            while (!ogreIsStuck) {
+                int failsafe = 0;
+                if (xPositive = false) {
+                    tempOgre.editX(-1);
+                    if (onSinkHole(tempOgre)) {
+                        tempOgre.editX(1);
+                        failsafe++;
+                    } else {
+                        System.out.print("U");
+                    }
+                } else {
+                    tempOgre.editX(1);
+                    if (onSinkHole(tempOgre)) {
+                        tempOgre.editX(-1);
+                        failsafe++;
+                    } else {
+                        System.out.print("D");
+                    }
+                }
+                if (yPositive = false) {
+                    tempOgre.editY(-1);
+                    if (onSinkHole(tempOgre)) {
+                        tempOgre.editY(1);
+                        failsafe++;
+                    } else {
+                        System.out.print("L");
+                    }
+                } else {
+                    tempOgre.editY(1);
+                    if (onSinkHole(tempOgre)) {
+                        tempOgre.editY(-1);
+                        failsafe++;
+                    } else {
+                        System.out.print("R");
+                    }
+                }
+
+                if (failsafe == 2) {
+                    ogreIsStuck = true;
+                }
+            }
+        }
+        return false;
     }
 
-    public boolean didWeFindGold() {
+
+    public boolean onSinkHole(Ogre ogre) {
+
         for (int i = 0; i < OGRE_SIZE; i++) {
-            if (ogre.get_position(i).get_x() == getGoldPosition().get_x() || ogre.get_position(i).get_y() == getGoldPosition().get_y()) {
+            for (int x = 0; x < sinkholes.amountOfSinkholes(); x++) {
+                if (ogre.get_position(i).get_x() == sinkholes.get_position(i).get_x() && ogre.get_position(i).get_y() == sinkholes.get_position(i).get_y()) {
+                    return true;
+                }
+            }
+            if (ogre.get_position(i).get_x() < 0 || ogre.get_position(i).get_x() > 9) {
+                return true;
+            }
+            if (ogre.get_position(i).get_y() < 0 || ogre.get_position(i).get_y() > 9) {
                 return true;
             }
         }
         return false;
     }
 
-    public int findSafeMove() {
-        Ogre tempOgre = ogre;
-        tempOgre.editY(+1);
-        if (safeMove(tempOgre)) {
-            return 2;
-        } else {
-            tempOgre.editY(-1);
-        }
-
-        tempOgre.editY(-1);
-        if (safeMove(tempOgre)) {
-            return 3;
-        } else {
-            tempOgre.editY(+1);
-        }
-
-        tempOgre.editX(-1);
-        if (safeMove(tempOgre)) {
-            return 0;
-        } else {
-            tempOgre.editX(+1);
-        }
-
-        tempOgre.editY(+1);
-        if (safeMove(tempOgre)) {
-            return 1;
-        } else {
-            tempOgre.editX(-1);
-        }
-        return -1;
-    }
-
-    public boolean safeMove(Ogre ogre) {
-        Coordinate testOgre[] = ogre.get_positions();
-        for (int i = 0; i < sinkholes.amountOfSinkholes(); i++) {
-            for (int x = 0; x < OGRE_SIZE; x++) {
-                if (compare(testOgre[x], sinkholes.get_position(i))) {
-                    return false;
-                }
-                if (testOgre[x].get_x() < 0 || testOgre[x].get_x() > 9) {
-                    return false;
-                }
-                if (testOgre[x].get_x() < 0 || testOgre[x].get_x() > 9) {
-                    return false;
-                }
+    public boolean touchingGold() {
+        for (int i = 0; i < OGRE_SIZE; i++) {
+            if (ogre.get_position(i).get_x() == goldPosition.get_x() && ogre.get_position(i).get_y() == goldPosition.get_y()) {
+                return true;
             }
         }
-        return true;
+        return false;
     }
 
     //Method to print the map...
@@ -253,3 +304,35 @@ public class OgreSwamp {
         return false;
     }
 }
+/*
+COMPILATION - 10:49PM - 4/28/2015
+"C:\Program Files (x86)\Java\jdk1.8.0_40\bin\java" -Didea.launcher.port=7550 "-Didea.launcher.bin.path=C:\Program Files (x86)\JetBrains\IntelliJ IDEA 14.0\bin" -Dfile.encoding=UTF-8 -classpath "C:\Program Files (x86)\Java\jdk1.8.0_40\jre\lib\charsets.jar;C:\Program Files (x86)\Java\jdk1.8.0_40\jre\lib\deploy.jar;C:\Program Files (x86)\Java\jdk1.8.0_40\jre\lib\javaws.jar;C:\Program Files (x86)\Java\jdk1.8.0_40\jre\lib\jce.jar;C:\Program Files (x86)\Java\jdk1.8.0_40\jre\lib\jfr.jar;C:\Program Files (x86)\Java\jdk1.8.0_40\jre\lib\jfxswt.jar;C:\Program Files (x86)\Java\jdk1.8.0_40\jre\lib\jsse.jar;C:\Program Files (x86)\Java\jdk1.8.0_40\jre\lib\management-agent.jar;C:\Program Files (x86)\Java\jdk1.8.0_40\jre\lib\plugin.jar;C:\Program Files (x86)\Java\jdk1.8.0_40\jre\lib\resources.jar;C:\Program Files (x86)\Java\jdk1.8.0_40\jre\lib\rt.jar;C:\Program Files (x86)\Java\jdk1.8.0_40\jre\lib\ext\access-bridge-32.jar;C:\Program Files (x86)\Java\jdk1.8.0_40\jre\lib\ext\cldrdata.jar;C:\Program Files (x86)\Java\jdk1.8.0_40\jre\lib\ext\dnsns.jar;C:\Program Files (x86)\Java\jdk1.8.0_40\jre\lib\ext\jaccess.jar;C:\Program Files (x86)\Java\jdk1.8.0_40\jre\lib\ext\jfxrt.jar;C:\Program Files (x86)\Java\jdk1.8.0_40\jre\lib\ext\localedata.jar;C:\Program Files (x86)\Java\jdk1.8.0_40\jre\lib\ext\nashorn.jar;C:\Program Files (x86)\Java\jdk1.8.0_40\jre\lib\ext\sunec.jar;C:\Program Files (x86)\Java\jdk1.8.0_40\jre\lib\ext\sunjce_provider.jar;C:\Program Files (x86)\Java\jdk1.8.0_40\jre\lib\ext\sunmscapi.jar;C:\Program Files (x86)\Java\jdk1.8.0_40\jre\lib\ext\sunpkcs11.jar;C:\Program Files (x86)\Java\jdk1.8.0_40\jre\lib\ext\zipfs.jar;C:\Users\Chayton\IdeaProjects\OgreSwamp\out\production\OgreSwamp;C:\Program Files (x86)\JetBrains\IntelliJ IDEA 14.0\lib\idea_rt.jar" com.intellij.rt.execution.application.AppMain com.github.chaytonscott.OgreSwamp.OgreSwamp
+Welcome to Ogre Swamp, please enter a map. (Type random to randomly generate a map)
+@@........
+@@O.......
+.....O.O..
+..........
+..O.O.....
+..O....O.O
+.O........
+..........
+.....OO...
+.........$
+OGRE POSITIONS:	(0,0) (0,1) (1,0) (1,1)
+SINKHOLE POSITIONS:	(1,2) (2,5) (2,7) (4,2) (4,4) (5,2) (5,7) (5,9) (6,1) (8,5) (8,6)
+GOLD POSITION:	(9,9)
+
+Integer Map for easier viewing...
+
+9 9 0 0 0 0 0 0 0 0
+9 9 3 0 0 0 0 0 0 0
+0 0 0 0 0 3 0 3 0 0
+0 0 0 0 0 0 0 0 0 0
+0 0 3 0 3 0 0 0 0 0
+0 0 3 0 0 0 0 3 0 3
+0 3 0 0 0 0 0 0 0 0
+0 0 0 0 0 0 0 0 0 0
+0 0 0 0 0 3 3 0 0 0
+0 0 0 0 0 0 0 0 0 6
+DRDRDRDR
+ */
