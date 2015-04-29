@@ -172,7 +172,7 @@ public class OgreSwamp {
             }
             while (!ogreIsStuck) {
                 int failsafe = 0;
-                if (xPositive = true) {
+                if (xPositive == true) {
                     tempOgre.editX(1);
                     if (onSinkHole(tempOgre)) {
                         tempOgre.editX(-1);
@@ -189,72 +189,82 @@ public class OgreSwamp {
                         System.out.print("U");
                     }
                 }
-                if (yPositive = true) {
-                    tempOgre.editY(1);
+                if (yPositive == true) {
+                    moveOgreLeft(tempOgre);
                     if (onSinkHole(tempOgre)) {
-                        tempOgre.editY(-1);
+                        moveOgreRight(tempOgre);
                         failsafe++;
                     } else {
                         System.out.print("R");
                     }
                 } else {
-                    tempOgre.editY(-1);
+                    moveOgreRight(tempOgre);
                     if (onSinkHole(tempOgre)) {
-                        tempOgre.editY(1);
+                        moveOgreLeft(tempOgre);
                         failsafe++;
                     } else {
                         System.out.print("L");
                     }
                 }
 
-                if (failsafe == 2) {
+                if (failsafe > 0) {
                     ogreIsStuck = true;
                 }
+                hold();
             }
             ogreIsStuck = false;
             while (!ogreIsStuck) {
                 int failsafe = 0;
-                if (xPositive = false) {
-                    tempOgre.editX(-1);
+                if (xPositive == false) {
+                    moveOgreUp(tempOgre);
                     if (onSinkHole(tempOgre)) {
-                        tempOgre.editX(1);
+                        moveOgreDown(tempOgre);
                         failsafe++;
                     } else {
                         System.out.print("U");
                     }
                 } else {
-                    tempOgre.editX(1);
+                    moveOgreDown(tempOgre);
                     if (onSinkHole(tempOgre)) {
-                        tempOgre.editX(-1);
+                        moveOgreUp(tempOgre);
                         failsafe++;
                     } else {
                         System.out.print("D");
                     }
                 }
-                if (yPositive = false) {
-                    tempOgre.editY(-1);
+                if (yPositive == false) {
+                    moveOgreLeft(tempOgre);
                     if (onSinkHole(tempOgre)) {
-                        tempOgre.editY(1);
+                        moveOgreRight(tempOgre);
                         failsafe++;
                     } else {
                         System.out.print("L");
                     }
                 } else {
-                    tempOgre.editY(1);
+                    moveOgreRight(tempOgre);
                     if (onSinkHole(tempOgre)) {
-                        tempOgre.editY(-1);
+                        moveOgreLeft(tempOgre);
                         failsafe++;
                     } else {
                         System.out.print("R");
                     }
                 }
 
-                if (failsafe == 2) {
+                if (failsafe > 0) {
                     ogreIsStuck = true;
                 }
+                hold();
             }
         }
         return false;
+    }
+
+    public void hold() {
+        try {
+            Thread.sleep(1000);                 //1000 milliseconds is one second.
+        } catch(InterruptedException ex) {
+            Thread.currentThread().interrupt();
+        }
     }
 
 
@@ -262,7 +272,7 @@ public class OgreSwamp {
 
         for (int i = 0; i < OGRE_SIZE; i++) {
             for (int x = 0; x < sinkholes.amountOfSinkholes(); x++) {
-                if (ogre.get_position(i).get_x() == sinkholes.get_position(i).get_x() && ogre.get_position(i).get_y() == sinkholes.get_position(i).get_y()) {
+                if (ogre.get_position(i).get_x() == sinkholes.get_position(x).get_x() && ogre.get_position(i).get_y() == sinkholes.get_position(x).get_y()) {
                     return true;
                 }
             }
